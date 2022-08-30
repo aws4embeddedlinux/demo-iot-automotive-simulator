@@ -154,8 +154,6 @@ Resources:
           Value: !Sub ${AWS::StackName}
         - Key: StackId
           Value: !Sub ${AWS::StackId}
-        - Key: GitHub
-          Value: https://github.com/aws-samples/amazon-ec2-nice-dcv-samples
 
   instanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -388,8 +386,6 @@ Resources:
           Value: !Sub ${AWS::StackName}
         - Key: StackId
           Value: !Sub ${AWS::StackId}
-        - Key: GitHub
-          Value: https://github.com/aws-samples/amazon-ec2-nice-dcv-samples
 
 Outputs:
   InstanceID:
