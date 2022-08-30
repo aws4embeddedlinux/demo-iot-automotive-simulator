@@ -222,6 +222,13 @@ Resources:
             "/home/ubuntu/install-carla":
               content: |
                 #!/bin/bash
+                
+                # install Python3.8 as default
+                sudo add-apt-repository ppa:deadsnakes/ppa -y
+                sudo apt-get update
+                sudo apt-get -q -y install python3.8 python3.8-dev python3.8-venv python3.8-distutils
+                sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
+                
                 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
                 sudo add-apt-repository -y "deb [arch=amd64] http://dist.carla.org/carla focal main"
                 sudo apt-get update
@@ -372,12 +379,6 @@ Resources:
         
             # cfn-init completed so signal success or not
             python2 /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ec2Instance --region ${AWS::Region}
-          
-            # install Python3.8 as default
-            add-apt-repository ppa:deadsnakes/ppa -y
-            apt-get update
-            apt-get -q -y install python3.8 python3.8-dev python3.8-venv python3.8-distutils
-            update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
         
             reboot
       Tags:
