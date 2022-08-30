@@ -54,7 +54,10 @@ The best way to test the Python API is to drive a car. In order to do so, you wi
 3. Run "python manual\_control.py".
 
 Here is the link to the complete [CARLA documentation](https://carla.readthedocs.io/en/0.9.13/)
+
 ![CARLA PythonAPI](/images/carla-manual-conrtrol.png "CARLA PythonAPI")
+
+This AWS CloudFormation template has been made possible by using as a reference the [Amazon EC2 NICE DVC Samples](https://github.com/aws-samples/amazon-ec2-nice-dcv-samples).
 
 ## Security
 
@@ -63,3 +66,4 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
+
