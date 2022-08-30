@@ -43,7 +43,7 @@ Once logged in to the Ubuntu remote desktop, run the command "./install-carla" f
 
 Then, you can test your CARLA installation by running "./CarlaUE4.sh" from "/opt/carla-simulator". You will see an image with the world simulation running successfully.
 
-\<IMAGE\>
+![CARLA Running](/images/carla-running.png "CARLA Running")
 
 ### Testing the PythonAPI
 
@@ -54,6 +54,7 @@ The best way to test the Python API is to drive a car. In order to do so, you wi
 3. Run "python manual\_control.py".
 
 Here is the link to the complete [CARLA documentation](https://carla.readthedocs.io/en/0.9.13/)
+![CARLA PythonAPI](/images/carla-manual-conrtrol.png "CARLA PythonAPI")
 
 ## Security
 
