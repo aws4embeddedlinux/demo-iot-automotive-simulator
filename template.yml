@@ -64,7 +64,7 @@ Parameters:
       - g5.12xlarge
       - g5.16xlarge
     ConstraintDescription: Must contain valid instance type.
-    Default: g4dn.2xlarge
+    Default: g4dn.xlarge
 
   ec2Name:
     Description: EC2 instance name
