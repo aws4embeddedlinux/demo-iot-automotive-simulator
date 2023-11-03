@@ -160,6 +160,8 @@ def get_actor_display_name(actor, truncate=250):
 class World(object):
     def __init__(self, carla_world, hud, args):
         self.world = carla_world
+        self.sync = args.sync
+        self.actor_role_name = args.rolename
         self.hud = hud
         self.player = None
         self.collision_sensor = None
@@ -184,7 +186,7 @@ class World(object):
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
         blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        blueprint.set_attribute('role_name', 'hero')
+        blueprint.set_attribute('role_name', self.actor_role_name)
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
@@ -210,6 +212,11 @@ class World(object):
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
+
+        if self.sync:
+            self.world.tick()
+        else:
+            self.world.wait_for_tick()
 
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
@@ -886,18 +893,36 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(20.0)
+
+        sim_world = client.get_world()
+        if args.sync:
+            original_settings = sim_world.get_settings()
+            settings = sim_world.get_settings()
+            if not settings.synchronous_mode:
+                settings.synchronous_mode = True
+                settings.fixed_delta_seconds = 0.05
+            sim_world.apply_settings(settings)
+
+            traffic_manager = client.get_trafficmanager()
+            traffic_manager.set_synchronous_mode(True)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        world = World(sim_world, hud, args)
         controller = DualControl(world, args.autopilot)
+        if args.sync:
+            sim_world.tick()
+        else:
+            sim_world.wait_for_tick()
 
         clock = pygame.time.Clock()
         while True:
+            if args.sync:
+                sim_world.tick()
             clock.tick_busy_loop(60)
             if controller.parse_events(world, clock):
                 return
@@ -957,6 +982,15 @@ def main():
         metavar='PATTERN',
         default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--rolename',
+        metavar='NAME',
+        default='hero',
+        help='actor role name (default: "hero")')
+    argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Activate synchronous mode execution')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
