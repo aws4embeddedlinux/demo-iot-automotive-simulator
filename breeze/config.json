@@ -1,0 +1,13 @@
+{
+    "vehicleName": "agl-demo",
+    "campaigns": [
+        {
+            "name": "heartbeat",
+            "configJson": "file://campaign-heartbeat.json"
+        },
+        {
+            "name": "brake-event",
+            "configJson": "file://campaign-brake-event.json"
+        }
+    ]
+}
