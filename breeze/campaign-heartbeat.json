@@ -1,0 +1,57 @@
+{
+    "name": "heartbeat",
+    "signalCatalogArn": "arn:aws:iotfleetwise:eu-central-1:<account id>:signal-catalog/fwdemo-ew22-test1-1654704280-signal-catalog",
+    "targetArn": "arn:aws:iotfleetwise:eu-central-1:<account id>:fleet/agl-demo-1654768395-fleet",
+    "compression": "SNAPPY",
+    "diagnosticsMode": "SEND_ACTIVE_DTCS",
+    "spoolingMode": "TO_DISK",
+    "collectionScheme": {
+        "timeBasedCollectionScheme": {
+            "periodMs": 10000
+        }
+    },
+    "signalsToCollect": [
+        {
+            "name": "Vehicle.ThrottlePosition"
+        },
+        {
+            "name": "Vehicle.VehicleSpeed"
+        },
+        {
+            "name": "Vehicle.SteeringPosition"
+        },
+        {
+            "name": "Vehicle.BrakePressure"
+        },
+        {
+            "name": "Vehicle.Gear"
+        },
+        {
+            "name": "Vehicle.CollisionIntensity"
+        },
+        {
+            "name": "Vehicle.AccelerationX"
+        },
+        {
+            "name": "Vehicle.AccelerationY"
+        },
+        {
+            "name": "Vehicle.AccelerationZ"
+        },
+        {
+            "name": "Vehicle.GyroscopeX"
+        },
+        {
+            "name": "Vehicle.GyroscopeY"
+        },
+        {
+            "name": "Vehicle.GyroscopeZ"
+        },
+        {
+            "name": "Vehicle.Latitude"
+        },
+        {
+            "name": "Vehicle.Longitude"
+        }
+    ]
+}
