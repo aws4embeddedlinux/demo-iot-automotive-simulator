@@ -1,17 +1,17 @@
 {
-    "vehicleName": "vin100",
-    "campaigns": [
-        {
-            "name": "heartbeat",
-            "configJson": "file://campaign-heartbeat.json"
-        },
-        {
-            "name": "brake-event-mixed",
-            "configJson": "file://campaign-break-event-mixed.json"
-        },
-        {
-            "name": "brake-event",
-            "configJson": "file://campaign-brake-event.json"
-        }
-    ]
+  "vehicleName": "vin100",
+  "campaigns": [
+    {
+      "name": "FwTimeBasedCANHeartbeat"
+    },
+    {
+      "name": "FwTimeBasedCampaignRichSensorHeartbeat"
+    },
+    {
+      "name": "FwBrakeEventMixedSensorsCampaign"
+    },
+    {
+      "name": "FwBrakeEventCANCampaign"
+    }
+  ]
 }

@@ -21,18 +21,16 @@ with open("./setup_config.json", "r") as c:
     conf = json.load(c)
 
 isGamma = conf.get('gamma', "false")
-gamma = False
 
-if isGamma == "true":
+if isGamma is "true":
     session = boto3.Session()
     session._loader.search_paths.extend([os.path.dirname(os.path.abspath(__file__)) + "/models"])
     fleetwise = session.client("iotfleetwise", region_name='us-west-2', endpoint_url='https://controlplane.us-west-2.gamma.kaleidoscope.iot.aws.dev')
-    gamma = True
+
 else:
     fleetwise = boto3.client(
         'iotfleetwise'
     )
-    gamma = False
 
 with open("./config.json", "r") as f:
     campaigns = json.load(f)
@@ -112,7 +110,7 @@ class BreezeApp(QtWidgets.QMainWindow, main_frame.Ui_MainWindow):
         self.statusBar.showMessage("Deploying campaign...")
         self.my_logger.debug("Deploy Clicked")
         #self.my_logger.debug("Delete all campaings first")
-        self.my_logger.debug("Suspending all campaings first")
+        self.my_logger.debug("Suspending all campaigns first")
         for i in range(self.comboBoxCampaigns.count()):
             campaign = self.comboBoxCampaigns.itemText(i)
             #self.my_logger.debug("<<<<< Delete campaign: " + campaign)
