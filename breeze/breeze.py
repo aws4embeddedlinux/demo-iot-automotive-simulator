@@ -16,9 +16,23 @@ TIMER_DELAY = 5000
 log = logging.getLogger('app_logger')
 logging.basicConfig(format='[%(asctime)s %(levelname)s] %(message)s', level=logging.DEBUG)
 
-fleetwise = boto3.client(
-    'iotfleetwise'
+
+with open("./setup_config.json", "r") as c:
+    conf = json.load(c)
+
+isGamma = conf.get('gamma', "false")
+gamma = False
+
+if isGamma == "true":
+    session = boto3.Session()
+    session._loader.search_paths.extend([os.path.dirname(os.path.abspath(__file__)) + "/models"])
+    fleetwise = session.client("iotfleetwise", region_name='us-west-2', endpoint_url='https://controlplane.us-west-2.gamma.kaleidoscope.iot.aws.dev')
+    gamma = True
+else:
+    fleetwise = boto3.client(
+        'iotfleetwise'
     )
+    gamma = False
 
 with open("./config.json", "r") as f:
     campaigns = json.load(f)
@@ -97,28 +111,45 @@ class BreezeApp(QtWidgets.QMainWindow, main_frame.Ui_MainWindow):
         self.timer.stop()
         self.statusBar.showMessage("Deploying campaign...")
         self.my_logger.debug("Deploy Clicked")
-        self.my_logger.debug("Delete all campaings first")
+        #self.my_logger.debug("Delete all campaings first")
+        self.my_logger.debug("Suspending all campaings first")
         for i in range(self.comboBoxCampaigns.count()):
             campaign = self.comboBoxCampaigns.itemText(i)
-            self.my_logger.debug("<<<<< Delete campaign: " + campaign)
-            self.statusBar.showMessage("Deleting a campaign: " + campaign)
-            fleetwise.delete_campaign(name=campaign)
+            #self.my_logger.debug("<<<<< Delete campaign: " + campaign)
+            self.my_logger.debug("<<<<< Suspend campaign: " + campaign)
+            #self.statusBar.showMessage("Deleting a campaign: " + campaign)
+            self.statusBar.showMessage("Suspending a campaign: " + campaign)
+            #fleetwise.delete_campaign(name=campaign)
+            fleetwise.update_campaign(name=campaign,action='SUSPEND')
         campaign = self.comboBoxCampaigns.currentText()
         self.active_campaign = campaign
         self.lbl2.setText("  Campaign Status : __________________   ")
         for e in campaigns["campaigns"]:
             if e["name"] == self.comboBoxCampaigns.currentText():
-                configJson = e["configJson"]
-                print("Create campaign : " + e["name"] + " - " + configJson )
-                self.statusBar.showMessage("Creating a campaign: " + campaign)
-                process = subprocess.Popen(['aws', 'iotfleetwise', 'create-campaign', '--cli-input-json', configJson, '--no-cli-pager'  ],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
-                stdout,stderr = process.communicate()
-                print(stdout)
+                #configJson = e["configJson"]
+                #print("Create campaign : " + e["name"] + " - " + configJson )
+                print("Update campaign : " + e["name"] )
+                #self.statusBar.showMessage("Creating a campaign: " + campaign)
+                self.statusBar.showMessage("Updating the campaign: " + campaign)
+                #if gamma:
+                    #print("Loading gamma model : " )
+                    #process_add_model = subprocess.Popen(['aws', 'configure', '--service-model file://models/iotfleetwise/2023-09-01/service-2.json', '--service-name iotfleetwise'  ],
+                        #stdout=subprocess.PIPE,
+                        #stderr=subprocess.PIPE)
+                    #stdout,stderr = process_add_model.communicate()
+                    #print(stdout)
+
+
+                #process = subprocess.Popen(['aws', 'iotfleetwise', 'create-campaign', '--cli-input-json', configJson, '--no-cli-pager'  ],
+                    #stdout=subprocess.PIPE,
+                    #stderr=subprocess.PIPE)
+                #stdout,stderr = process.communicate()
+                #print(stdout)
+                fleetwise.update_campaign(name=campaign,action='RESUME')
                 campaign_status = fleetwise.get_campaign(name=self.active_campaign)
                 self.lbl2.setText("  Campaign Status : " + campaign_status["status"])
-                self.statusBar.showMessage("Campaign created: " + campaign)
+                #self.statusBar.showMessage("Campaign created: " + campaign)
+                self.statusBar.showMessage("Campaign resumed: " + campaign)
         self.btnDeploy.setEnabled(True)
         self.comboBoxCampaigns.setEnabled(True)
         self.timer.start(1000)

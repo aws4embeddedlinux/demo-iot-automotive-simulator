@@ -1,8 +1,8 @@
 {
 
     "name": "brake-event",
-    "signalCatalogArn": "arn:aws:iotfleetwise:eu-central-1:<account id>:signal-catalog/fwdemo-ew22-test1-1654704280-signal-catalog",
-    "targetArn": "arn:aws:iotfleetwise:eu-central-1:<account id>:fleet/agl-demo-1654768395-fleet",
+    "signalCatalogArn": "TODO",
+    "targetArn": "TODO",
     "compression": "SNAPPY",
     "diagnosticsMode": "OFF",
     "spoolingMode": "TO_DISK",
