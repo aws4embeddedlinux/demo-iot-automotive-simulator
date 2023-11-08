@@ -1,15 +1,20 @@
 {
-    "name": "heartbeat",
+
+    "name": "brake-event",
     "signalCatalogArn": "TODO",
     "targetArn": "TODO",
     "compression": "SNAPPY",
-    "diagnosticsMode": "SEND_ACTIVE_DTCS",
+    "diagnosticsMode": "OFF",
     "spoolingMode": "TO_DISK",
     "collectionScheme": {
-        "timeBasedCollectionScheme": {
-            "periodMs": 10000
+        "conditionBasedCollectionScheme": {
+            "conditionLanguageVersion": 1,
+            "expression": "$variable.`Vehicle.BrakePressure` > 7000",
+            "minimumTriggerIntervalMs": 1000,
+            "triggerMode": "ALWAYS"
         }
     },
+    "postTriggerCollectionDuration": 1000,
     "signalsToCollect": [
         {
             "name": "Vehicle.ThrottlePosition"
@@ -52,6 +57,9 @@
         },
         {
             "name": "Vehicle.Longitude"
+        },
+        {
+
         }
     ]
 }
