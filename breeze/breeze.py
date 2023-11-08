@@ -9,6 +9,7 @@ import json
 import logging
 import boto3
 from botocore.exceptions import ClientError
+import os
 
 INITIAL_TIMER_DELAY = 5000
 TIMER_DELAY = 5000
@@ -22,7 +23,7 @@ with open("./setup_config.json", "r") as c:
 
 isGamma = conf.get('gamma', "false")
 
-if isGamma is "true":
+if isGamma == "true":
     session = boto3.Session()
     session._loader.search_paths.extend([os.path.dirname(os.path.abspath(__file__)) + "/models"])
     fleetwise = session.client("iotfleetwise", region_name='us-west-2', endpoint_url='https://controlplane.us-west-2.gamma.kaleidoscope.iot.aws.dev')
