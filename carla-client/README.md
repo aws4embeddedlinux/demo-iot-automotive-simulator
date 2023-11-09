@@ -87,7 +87,14 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    ros2 launch carla_spawn_objects carla_spawn_objects.launch.py spawn_sensors_only:=True objects_definition_file:=ros2-sensors/objects.json
    ```
 
-8. **Start Breeze**
+8. **Convert from raw to compressed Images**
+
+   ```bash
+   sudo apt-get install ros-galactic-image-transport-plugins
+   ros2 run image_transport republish raw compressed --ros-args --remap in:=/carla/ego_vehicle/rgb_view/image --remap out/compressed:=/carla/ego_vehicle/rgb_view/compressed_image
+   ```
+
+9. **Start Breeze**
 
    ```bash
    python3 breeze.py
