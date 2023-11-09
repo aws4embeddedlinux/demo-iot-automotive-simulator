@@ -6,7 +6,7 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
 
 **System Architecture**
 
-!(image)[carla-ros2.drawio.png]
+![image](carla-ros2.drawio.png)
 
 ## Installation Steps
 
