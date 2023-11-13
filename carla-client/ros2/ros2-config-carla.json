@@ -1,0 +1,119 @@
+{
+  "messages": [
+    {
+      "fullyQualifiedName": "Vehicle.Cameras.Front.CameraInfo",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/rgb_front/camera_info",
+      "type": "sensor_msgs/msg/CameraInfo"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Cameras.Front.Image",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/rgb_front/compressed_image",
+      "type": "sensor_msgs/msg/CompressedImage"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Cameras.DepthFront.CameraInfo",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/depth_front/camera_info",
+      "type": "sensor_msgs/msg/CameraInfo"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Cameras.DepthFront.Image",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/depth_front/compressed_image",
+      "type": "sensor_msgs/msg/CompressedImage"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Sensors.Lidar",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/lidar",
+      "type": "sensor_msgs/msg/PointCloud2"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Collision",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/collision",
+      "type": "carla_msgs/msg/CarlaCollisionEvent"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.LaneInvasion",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/lane_invasion",
+      "type": "carla_msgs/msg/CarlaLaneInvasionEvent"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Speedometer",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/speedometer",
+      "type": "std_msgs/msg/Float32"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Sensors.RadarFront",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/radar_front",
+      "type": "sensor_msgs/msg/PointCloud2"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Markers",
+      "interfaceId": "10",
+      "topic": "/carla/markers",
+      "type": "visualization_msgs/Marker"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Odometry",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/odometry",
+      "type": "nav_msgs/msg/Odometry"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.GNSS",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/gnss",
+      "type": "sensor_msgs/msg/NavSatFix"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.CollisionWith",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/collision_with",
+      "type": "std_msgs/msg/String"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.Gear",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/gear",
+      "type": "std_msgs/msg/Int32"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.LaneCrossing",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/lane_crossing",
+      "type": "std_msgs/msg/lane_crossing"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.CollisionIntensity",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/collision_intensity",
+      "type": "std_msgs/msg/Float32"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.ThrottlePosition",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/throttle_position",
+      "type": "std_msgs/msg/Float32"
+    },
+    {
+      "fullyQualifiedName": "Vehicle.BrakePressure",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/brake_pressure",
+      "type": "std_msgs/msg/Float32"
+    }
+    ,
+    {
+      "fullyQualifiedName": "Vehicle.imu",
+      "interfaceId": "10",
+      "topic": "/carla/ego_vehicle/imu",
+      "type": "sensor_msgs/msg/Imu"
+    }
+  ]
+}
