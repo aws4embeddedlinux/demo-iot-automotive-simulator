@@ -28,7 +28,7 @@ def getCAN():
 	context= pyudev.Context()
 	monitor= pyudev.Monitor.from_netlink(context)
 	monitor.filter_by(subsystem='usb')
-	mc={"PID": 0x0a30, "VID": 0x04d8}
+	mc={"PID": 0x606f, "VID": 0x1d50}
 	
 	dev = usb.core.find(idVendor=mc['VID'], idProduct=mc['PID'])
 	if dev != None:
@@ -54,6 +54,7 @@ def receive_all(Serialport, canX):
 		except NotImplementedError:
 			pass
 			
+		print("Entering main loop...")
 		try: 
 			while True: 
 				msg = bus.recv(1)
