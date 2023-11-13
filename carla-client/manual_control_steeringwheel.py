@@ -59,6 +59,10 @@ import random
 import re
 import weakref
 
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float32, Int32, String
+
 if sys.version_info >= (3, 0):
 
     from configparser import ConfigParser
@@ -151,6 +155,32 @@ def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
+# ==============================================================================
+# -- CarlaRos2Publisher ---------------------------------------------------------------------
+# ==============================================================================
+
+class CarlaRos2Publisher(Node):
+    def __init__(self, role_name):
+        super().__init__('carla_ros2_publisher')
+        self.role_name = role_name
+        self.signal_publishers = {}
+
+    def publish_data(self, key, value, data_type):
+        # Determine the topic
+        topic = f'carla/{self.role_name}/{key}'
+
+        # Create the publisher if it doesn't exist
+        if topic not in self.signal_publishers:
+            self.signal_publishers[topic] = self.create_publisher(data_type, topic, 10)
+
+        # Publish the data
+        msg = data_type()
+        if data_type == String:
+            msg.data = str(value)
+        else:
+            msg.data = value
+        self.signal_publishers[topic].publish(msg)
+
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
@@ -158,11 +188,12 @@ def get_actor_display_name(actor, truncate=250):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, args, carla_ros2_publisher):
         self.world = carla_world
         self.sync = args.sync
         self.actor_role_name = args.rolename
         self.hud = hud
+        self.carla_ros2_publisher = carla_ros2_publisher
         self.player = None
         self.collision_sensor = None
         self.lane_invasion_sensor = None
@@ -203,8 +234,8 @@ class World(object):
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         # Set up the sensors.
-        self.collision_sensor = CollisionSensor(self.player, self.hud)
-        self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
+        self.collision_sensor = CollisionSensor(self.player, self.hud, self.carla_ros2_publisher)
+        self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud, self.carla_ros2_publisher)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
         self.camera_manager = CameraManager(self.player, self.hud)
@@ -232,10 +263,14 @@ class World(object):
         transform = self.player.get_transform()
         speed_kph = 3.6 * math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
         collision_intensity = self.collision_sensor.intensity
-        self.can.set_sig('ThrottlePosition', control.throttle * 100)
+
+        throttle_position = control.throttle * 100
+        steering_position = control.steer * 45
+        brake_preasure = control.brake * 19125
+        self.can.set_sig('ThrottlePosition', throttle_position)
         self.can.set_sig('VehicleSpeed', speed_kph)
-        self.can.set_sig('SteeringPosition', control.steer * 45)
-        self.can.set_sig('BrakePressure', control.brake * 19125)
+        self.can.set_sig('SteeringPosition', steering_position)
+        self.can.set_sig('BrakePressure', brake_preasure)
         self.can.set_sig('Gear', control.gear)
         self.can.set_sig('CollisionIntensity', collision_intensity)
         self.can.set_sig('Latitude', self.gnss_sensor.lat)
@@ -246,6 +281,12 @@ class World(object):
         self.can.set_sig('GyroscopeX', self.imu_sensor.gyroscope[0])
         self.can.set_sig('GyroscopeY', self.imu_sensor.gyroscope[1])
         self.can.set_sig('GyroscopeZ', self.imu_sensor.gyroscope[2])
+
+        self.carla_ros2_publisher.publish_data('throttle_position', throttle_position, Float32)
+        self.carla_ros2_publisher.publish_data('steering_position', steering_position, Float32)
+        self.carla_ros2_publisher.publish_data('brake_preasure', brake_preasure, Float32)
+        self.carla_ros2_publisher.publish_data('gear', control.gear, Int32)
+
 
     def render(self, display):
         self.camera_manager.render(display)
@@ -377,7 +418,7 @@ class DualControl(object):
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
-                self._parse_vehicle_wheel()
+                # self._parse_vehicle_wheel()
                 self._control.reverse = self._control.gear < 0
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time())
@@ -656,7 +697,7 @@ class HelpText(object):
 
 
 class CollisionSensor(object):
-    def __init__(self, parent_actor, hud):
+    def __init__(self, parent_actor, hud, carla_ros2_publisher):
         self.sensor = None
         self.history = []
         self.intensity = 0
@@ -669,6 +710,7 @@ class CollisionSensor(object):
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: CollisionSensor._on_collision(weak_self, event))
+        self.carla_ros2_publisher = carla_ros2_publisher
 
     def get_collision_history(self):
         history = collections.defaultdict(int)
@@ -689,6 +731,9 @@ class CollisionSensor(object):
         if len(self.history) > 4000:
             self.history.pop(0)
 
+        self.carla_ros2_publisher.publish_data('collision_intensity', float(self.intensity), Float32)
+        self.carla_ros2_publisher.publish_data('collision_with', actor_type, String)
+
 
 # ==============================================================================
 # -- LaneInvasionSensor --------------------------------------------------------
@@ -696,10 +741,11 @@ class CollisionSensor(object):
 
 
 class LaneInvasionSensor(object):
-    def __init__(self, parent_actor, hud):
+    def __init__(self, parent_actor, hud, carla_ros2_publisher):
         self.sensor = None
         self._parent = parent_actor
         self.hud = hud
+        self.carla_ros2_publisher = carla_ros2_publisher
         world = self._parent.get_world()
         bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
         self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
@@ -707,6 +753,7 @@ class LaneInvasionSensor(object):
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
+        
 
     @staticmethod
     def _on_invasion(weak_self, event):
@@ -716,6 +763,8 @@ class LaneInvasionSensor(object):
         lane_types = set(x.type for x in event.crossed_lane_markings)
         text = ['%r' % str(x).split()[-1] for x in lane_types]
         self.hud.notification('Crossed line %s' % ' and '.join(text))
+        msg = ' and '.join(text)
+        self.carla_ros2_publisher.publish_data('lane_crossing', msg, String)
 
 # ==============================================================================
 # -- GnssSensor --------------------------------------------------------
@@ -890,6 +939,7 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    carla_ros2_publisher = None
 
     try:
         client = carla.Client(args.host, args.port)
@@ -911,8 +961,13 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
 
+        # Initialize carla_ros2_publisher
+        rclpy.init(args=None)
+        role_name = args.rolename  
+        carla_ros2_publisher = CarlaRos2Publisher(role_name)
+
         hud = HUD(args.width, args.height)
-        world = World(sim_world, hud, args)
+        world = World(sim_world, hud, args, carla_ros2_publisher)
         controller = DualControl(world, args.autopilot)
         if args.sync:
             sim_world.tick()
@@ -929,12 +984,18 @@ def game_loop(args):
             world.tick(clock)
             world.render(display)
             pygame.display.flip()
+            rclpy.spin_once(carla_ros2_publisher, timeout_sec=0)
 
     finally:
 
         if world is not None:
             world.destroy()
             world.stop()
+
+        if carla_ros2_publisher is not None:
+            carla_ros2_publisher.destroy_node()
+
+        rclpy.shutdown()
 
         pygame.quit()
 

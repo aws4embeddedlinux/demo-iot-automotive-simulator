@@ -64,10 +64,16 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
 
    ```bash
    cd ~/carla-client
+   source /opt/ros/galactic/setup.bash
    python3 manual_control_steeringwheel.py --sync --rolename ego_vehicle --filter vehicle.tesla.model3 -i can0
    ```
 
-6. **Run the ROS2 Bridge**
+6. **Generate Traffic**
+   ```bash
+   python3 /opt/carla-simulator/PythonAPI/examples/generate_traffic.py -n 15 -w 20
+   ```
+
+7. **Run the ROS2 Bridge**
 
    Launch the ROS2 bridge with the Carla simulator:
 
@@ -77,7 +83,7 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    ros2 launch carla_ros_bridge carla_ros_bridge.launch.py timeout:=20000 register_all_sensors:=false synchronous_mode:=false passive:=true
    ```
 
-7. **Spawn Sensors Using Objects Definition File**
+8. **Spawn Sensors Using Objects Definition File**
 
    Use the provided objects definition file to spawn all sensors:
 
@@ -87,14 +93,14 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    ros2 launch carla_spawn_objects carla_spawn_objects.launch.py spawn_sensors_only:=True objects_definition_file:=ros2-sensors/objects.json
    ```
 
-8. **Convert from raw to compressed Images**
+9. **Convert from raw to compressed Images**
 
    ```bash
-   sudo apt-get install ros-galactic-image-transport-plugins
-   ros2 run image_transport republish raw compressed --ros-args --remap in:=/carla/ego_vehicle/rgb_view/image --remap out/compressed:=/carla/ego_vehicle/rgb_view/compressed_image
+   python3 ros2/image_converter.py --input_topic /carla/ego_vehicle/rgb_front/image --output_topic /carla/ego_vehicle/rgb_front/image_compressed
+   python3 ros2/image_converter.py --input_topic /carla/ego_vehicle/depth_front/image --output_topic /carla/ego_vehicle/depth_front/image_compressed
    ```
 
-9. **Start Breeze**
+10. **Start Breeze**
 
    ```bash
    python3 breeze.py
@@ -103,3 +109,10 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
 ## Troubleshooting
 
 If you encounter any issues, please ensure all environment variables are correctly set and that all dependencies are properly installed.
+To inspect ros2 topics use the following commands:
+
+```
+source /opt/ros/galactic/setup.bash
+ros2 topic list
+ros2 topic echo <topic>
+```
