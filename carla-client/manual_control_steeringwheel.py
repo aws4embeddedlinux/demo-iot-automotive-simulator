@@ -266,11 +266,11 @@ class World(object):
 
         throttle_position = control.throttle * 100
         steering_position = control.steer * 45
-        brake_preasure = control.brake * 19125
+        brake_pressure = control.brake * 19125
         self.can.set_sig('ThrottlePosition', throttle_position)
         self.can.set_sig('VehicleSpeed', speed_kph)
         self.can.set_sig('SteeringPosition', steering_position)
-        self.can.set_sig('BrakePressure', brake_preasure)
+        self.can.set_sig('BrakePressure', brake_pressure)
         self.can.set_sig('Gear', control.gear)
         self.can.set_sig('CollisionIntensity', collision_intensity)
         self.can.set_sig('Latitude', self.gnss_sensor.lat)
@@ -284,7 +284,7 @@ class World(object):
 
         self.carla_ros2_publisher.publish_data('throttle_position', throttle_position, Float32)
         self.carla_ros2_publisher.publish_data('steering_position', steering_position, Float32)
-        self.carla_ros2_publisher.publish_data('brake_preasure', brake_preasure, Float32)
+        self.carla_ros2_publisher.publish_data('brake_pressure', brake_pressure, Float32)
         self.carla_ros2_publisher.publish_data('gear', control.gear, Int32)
 
 
