@@ -106,6 +106,14 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    python3 breeze.py
    ```
 
+## (Optional) Start Up Script
+
+Optionally, there is a `start.sh`` script that starts all the processes and ensures that if one of them dies, everything is closed properly. It can be used to start the demo.
+
+```
+./start.sh
+```
+
 ## Troubleshooting
 
 If you encounter any issues, please ensure all environment variables are correctly set and that all dependencies are properly installed.
