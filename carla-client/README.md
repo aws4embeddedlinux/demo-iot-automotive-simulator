@@ -90,7 +90,7 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    ```bash
    source /opt/ros/galactic/setup.bash
    source ~/ros2_ws/install/setup.bash
-   ros2 launch carla_spawn_objects carla_spawn_objects.launch.py spawn_sensors_only:=True objects_definition_file:=ros2-sensors/objects.json
+   ros2 launch carla_spawn_objects carla_spawn_objects.launch.py spawn_sensors_only:=True objects_definition_file:=ros2/objects.json
    ```
 
 9. **Convert from raw to compressed Images**
