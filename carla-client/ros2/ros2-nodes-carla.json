@@ -900,8 +900,13 @@
     }
   },
   {
+    "branch": {
+      "fullyQualifiedName": "Vehicle.ROS2"
+    }
+  },
+  {
     "sensor": {
-      "fullyQualifiedName": "Vehicle.CollisionWith",
+      "fullyQualifiedName": "Vehicle.ROS2.CollisionWith",
       "dataType": "STRUCT",
       "structFullyQualifiedName": "Types.std_msgs_msg_String"
     }
@@ -919,11 +924,6 @@
     }
   },
   {
-    "branch": {
-      "fullyQualifiedName": "Vehicle.ROS2"
-    }
-  },
-  {
     "sensor": {
       "fullyQualifiedName": "Vehicle.ROS2.Gear",
       "dataType": "STRUCT",
@@ -932,7 +932,7 @@
   },
   {
     "sensor": {
-      "fullyQualifiedName": "Vehicle.LaneCrossing",
+      "fullyQualifiedName": "Vehicle.ROS2.LaneCrossing",
       "dataType": "STRUCT",
       "structFullyQualifiedName": "Types.std_msgs_msg_String"
     }

@@ -73,7 +73,7 @@
       "type": "sensor_msgs/msg/NavSatFix"
     },
     {
-      "fullyQualifiedName": "Vehicle.CollisionWith",
+      "fullyQualifiedName": "Vehicle.ROS2.CollisionWith",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/collision_with",
       "type": "std_msgs/msg/String"
@@ -85,7 +85,7 @@
       "type": "std_msgs/msg/Int32"
     },
     {
-      "fullyQualifiedName": "Vehicle.LaneCrossing",
+      "fullyQualifiedName": "Vehicle.ROS2.LaneCrossing",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/lane_crossing",
       "type": "std_msgs/msg/String"

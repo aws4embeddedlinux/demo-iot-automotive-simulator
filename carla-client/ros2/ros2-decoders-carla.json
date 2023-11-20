@@ -2062,7 +2062,7 @@
     }
   },
   {
-    "fullyQualifiedName": "Vehicle.CollisionWith",
+    "fullyQualifiedName": "Vehicle.ROS2.CollisionWith",
     "type": "MESSAGE_SIGNAL",
     "interfaceId": "10",
     "messageSignal": {
@@ -2106,7 +2106,7 @@
     }
   },
   {
-    "fullyQualifiedName": "Vehicle.LaneCrossing",
+    "fullyQualifiedName": "Vehicle.ROS2.LaneCrossing",
     "type": "MESSAGE_SIGNAL",
     "interfaceId": "10",
     "messageSignal": {
