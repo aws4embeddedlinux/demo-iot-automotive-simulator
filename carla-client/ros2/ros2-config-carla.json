@@ -79,7 +79,7 @@
       "type": "std_msgs/msg/String"
     },
     {
-      "fullyQualifiedName": "Vehicle.Gear",
+      "fullyQualifiedName": "Vehicle.ROS2.Gear",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/gear",
       "type": "std_msgs/msg/Int32"
@@ -88,22 +88,22 @@
       "fullyQualifiedName": "Vehicle.LaneCrossing",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/lane_crossing",
-      "type": "std_msgs/msg/lane_crossing"
+      "type": "std_msgs/msg/String"
     },
     {
-      "fullyQualifiedName": "Vehicle.CollisionIntensity",
+      "fullyQualifiedName": "Vehicle.ROS2.CollisionIntensity",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/collision_intensity",
       "type": "std_msgs/msg/Float32"
     },
     {
-      "fullyQualifiedName": "Vehicle.ThrottlePosition",
+      "fullyQualifiedName": "Vehicle.ROS2.ThrottlePosition",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/throttle_position",
       "type": "std_msgs/msg/Float32"
     },
     {
-      "fullyQualifiedName": "Vehicle.BrakePressure",
+      "fullyQualifiedName": "Vehicle.ROS2.BrakePressure",
       "interfaceId": "10",
       "topic": "/carla/ego_vehicle/brake_pressure",
       "type": "std_msgs/msg/Float32"
