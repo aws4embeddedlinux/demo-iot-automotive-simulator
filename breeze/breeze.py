@@ -49,13 +49,16 @@ class BreezeApp(QtWidgets.QMainWindow, main_frame.Ui_MainWindow):
         super(BreezeApp, self).__init__(parent)
         self.setupUi(self)
         self.labelVehicleID.setText("Vehicle ID :  " + vehicle_id)
-        for e in campaigns["campaigns"]:
-            self.comboBoxCampaigns.addItem(e["name"])
+
+        self.checkBoxes = []
+
+        for i, e in enumerate(campaigns["campaigns"]):
+            checkBox = QtWidgets.QCheckBox(e["name"], self.centralwidget)
+            checkBox.setGeometry(QtCore.QRect(10, 110 + i*40, 400, 30))
+            self.checkBoxes.append(checkBox)
         self.btnDeploy.clicked.connect(self.btnDeploy_clicked)
 
-        self.comboBoxCampaigns.currentIndexChanged.connect(self.comboBoxCampaigns_indexChanged)
         self.my_logger = logger
-        self.my_logger.debug("Campaign selected: " + self.comboBoxCampaigns.currentText() + '  ' + str(0))
         self.timer=QTimer()
         self.timer.timeout.connect(self.timer_timeout)
         self.pixmap = QPixmap('./resources/aws_icon.png')
@@ -82,18 +85,27 @@ class BreezeApp(QtWidgets.QMainWindow, main_frame.Ui_MainWindow):
 
         self.lbl1.setText("  Vehicle Status : __________________   ")
         self.lbl2.setText("  Campaign Status : __________________   ")
-        self.active_campaign = ""
+        self.active_campaign = []
 
     def timer_timeout(self):
         self.timer.stop()
-        self.statusBar.showMessage("Checking campaign status... " + self.active_campaign)
-        campaign_status = fleetwise.get_campaign(name=self.active_campaign)
-        self.lbl2.setText("  Campaign Status : " + campaign_status["status"])
-        if (campaign_status["status"] == "WAITING_FOR_APPROVAL"):
-            print("Approving campaign : " + self.active_campaign )
-            fleetwise.update_campaign(name=self.active_campaign, action="APPROVE")
-        campaign_status = fleetwise.get_campaign(name=self.active_campaign)
-        self.lbl2.setText("  Campaign Status : " + campaign_status["status"])
+        if not self.active_campaign:
+            self.statusBar.showMessage("No active campaigns.")
+            return
+
+        for campaign_name in self.active_campaign:
+            self.statusBar.showMessage(f"Checking campaign status... {campaign_name}")
+            campaign_status = fleetwise.get_campaign(name=campaign_name)
+            # Assuming you want to update lbl2 with the status of each campaign
+            self.lbl2.setText(f"Campaign Status for {campaign_name}: {campaign_status['status']}")
+
+            if campaign_status["status"] == "WAITING_FOR_APPROVAL":
+                print(f"Approving campaign: {campaign_name}")
+                fleetwise.update_campaign(name=campaign_name, action="APPROVE")
+                campaign_status = fleetwise.get_campaign(name=campaign_name)
+                self.lbl2.setText(f"Campaign Status for {campaign_name}: {campaign_status['status']}")
+
+        # Vehicle status handling remains the same
         self.statusBar.showMessage("Checking vehicle status... " + vehicle_id)
         vehicle_status = fleetwise.get_vehicle_status(vehicleName=vehicle_id)
         status = vehicle_status["campaigns"][0]["status"] if len(vehicle_status["campaigns"]) > 0 else ""
@@ -101,56 +113,48 @@ class BreezeApp(QtWidgets.QMainWindow, main_frame.Ui_MainWindow):
         self.statusBar.showMessage("")
         self.timer.start(TIMER_DELAY)
 
-    def comboBoxCampaigns_indexChanged(self, index):
-        self.my_logger.debug("Campaign selected: " + self.comboBoxCampaigns.currentText() + '  ' + str(index))
 
     def btnDeploy_clicked(self):
         self.btnDeploy.setEnabled(False)
-        self.comboBoxCampaigns.setEnabled(False)
+        for checkBox in self.checkBoxes:
+            checkBox.setEnabled(False)
         self.timer.stop()
-        self.statusBar.showMessage("Deploying campaign...")
+        self.statusBar.showMessage("Preparing to deploy campaigns...")
         self.my_logger.debug("Deploy Clicked")
-        #self.my_logger.debug("Delete all campaings first")
+
+        # Suspending all campaigns
         self.my_logger.debug("Suspending all campaigns first")
-        for i in range(self.comboBoxCampaigns.count()):
-            campaign = self.comboBoxCampaigns.itemText(i)
-            #self.my_logger.debug("<<<<< Delete campaign: " + campaign)
-            self.my_logger.debug("<<<<< Suspend campaign: " + campaign)
-            #self.statusBar.showMessage("Deleting a campaign: " + campaign)
-            self.statusBar.showMessage("Suspending a campaign: " + campaign)
-            #fleetwise.delete_campaign(name=campaign)
-            fleetwise.update_campaign(name=campaign,action='SUSPEND')
-        campaign = self.comboBoxCampaigns.currentText()
-        self.active_campaign = campaign
-        self.lbl2.setText("  Campaign Status : __________________   ")
-        for e in campaigns["campaigns"]:
-            if e["name"] == self.comboBoxCampaigns.currentText():
-                #configJson = e["configJson"]
-                #print("Create campaign : " + e["name"] + " - " + configJson )
-                print("Update campaign : " + e["name"] )
-                #self.statusBar.showMessage("Creating a campaign: " + campaign)
-                self.statusBar.showMessage("Updating the campaign: " + campaign)
-                #if gamma:
-                    #print("Loading gamma model : " )
-                    #process_add_model = subprocess.Popen(['aws', 'configure', '--service-model file://models/iotfleetwise/2023-09-01/service-2.json', '--service-name iotfleetwise'  ],
-                        #stdout=subprocess.PIPE,
-                        #stderr=subprocess.PIPE)
-                    #stdout,stderr = process_add_model.communicate()
-                    #print(stdout)
+        for campaign_data in campaigns["campaigns"]:
+            campaign_name = campaign_data["name"]
+            self.my_logger.debug("<<<<< Suspend campaign: " + campaign_name)
+            self.statusBar.showMessage("Suspending a campaign: " + campaign_name)
+            fleetwise.update_campaign(name=campaign_name, action='SUSPEND')
 
+        # Handling selected campaigns
+        selected_campaigns = [checkBox.text() for checkBox in self.checkBoxes if checkBox.isChecked()]
+        if not selected_campaigns:
+            self.statusBar.showMessage("No campaigns selected.")
+            self.btnDeploy.setEnabled(True)
+            for checkBox in self.checkBoxes:
+                checkBox.setEnabled(True)
+            return
 
-                #process = subprocess.Popen(['aws', 'iotfleetwise', 'create-campaign', '--cli-input-json', configJson, '--no-cli-pager'  ],
-                    #stdout=subprocess.PIPE,
-                    #stderr=subprocess.PIPE)
-                #stdout,stderr = process.communicate()
-                #print(stdout)
-                fleetwise.update_campaign(name=campaign,action='RESUME')
-                campaign_status = fleetwise.get_campaign(name=self.active_campaign)
-                self.lbl2.setText("  Campaign Status : " + campaign_status["status"])
-                #self.statusBar.showMessage("Campaign created: " + campaign)
-                self.statusBar.showMessage("Campaign resumed: " + campaign)
+        for campaign in selected_campaigns:
+            self.my_logger.debug(f"Processing campaign: {campaign}")
+            self.active_campaign = campaign
+            self.lbl2.setText("  Campaign Status : __________________   ")
+
+            # Updating and resuming the selected campaign
+            print("Update campaign : " + campaign)
+            self.statusBar.showMessage("Updating the campaign: " + campaign)
+            fleetwise.update_campaign(name=campaign, action='RESUME')
+            campaign_status = fleetwise.get_campaign(name=self.active_campaign)
+            self.lbl2.setText("  Campaign Status : " + campaign_status["status"])
+            self.statusBar.showMessage("Campaign resumed: " + campaign)
+
         self.btnDeploy.setEnabled(True)
-        self.comboBoxCampaigns.setEnabled(True)
+        for checkBox in self.checkBoxes:
+            checkBox.setEnabled(True)
         self.timer.start(1000)
 
 

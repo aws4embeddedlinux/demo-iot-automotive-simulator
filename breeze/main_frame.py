@@ -24,12 +24,10 @@ class Ui_MainWindow(object):
         self.btnDeploy.setFont(font)
         self.btnDeploy.setStyleSheet("color: rgb(32, 74, 135);")
         self.btnDeploy.setObjectName("btnDeploy")
-        self.comboBoxCampaigns = QtWidgets.QComboBox(self.centralwidget)
-        self.comboBoxCampaigns.setGeometry(QtCore.QRect(10, 110, 551, 111))
+
         font = QtGui.QFont()
         font.setPointSize(24)
-        self.comboBoxCampaigns.setFont(font)
-        self.comboBoxCampaigns.setObjectName("comboBoxCampaigns")
+
         self.labelVehicleID = QtWidgets.QLabel(self.centralwidget)
         self.labelVehicleID.setGeometry(QtCore.QRect(160, 20, 731, 21))
         font = QtGui.QFont()
@@ -71,7 +69,7 @@ class Ui_MainWindow(object):
         self.labelIcon_3.setObjectName("labelIcon_3")
         self.labelIcon_3.raise_()
         self.btnDeploy.raise_()
-        self.comboBoxCampaigns.raise_()
+
         self.labelVehicleID.raise_()
         self.label_2.raise_()
         self.txtVehicleStatus.raise_()
