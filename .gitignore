@@ -2,3 +2,4 @@
 .idea
 samconfig.toml
 /demo-iot-automotive-simulator.iml
+logs
