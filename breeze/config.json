@@ -1,5 +1,5 @@
 {
-  "vehicleName": "vin100",
+  "vehicleName": "vCar",
   "campaigns": [
     {
       "name": "FwTimeBasedCANHeartbeat"
