@@ -48,14 +48,16 @@ main() {
     cd ..
     log "pids: $pids"
 
+    sleep 10
+
     pids+=($(start_process "ros2 launch carla_ros_bridge carla_ros_bridge.launch.py timeout:=20000 register_all_sensors:=false synchronous_mode:=false passive:=true" "$log_dir/carla_ros_bridge.log"))
     pids+=($(start_process "ros2 launch carla_spawn_objects carla_spawn_objects.launch.py spawn_sensors_only:=True objects_definition_file:=./carla-client/ros2/objects.json" "$log_dir/carla_spawn_objects.log"))
 
     log "pids: $pids"
 
     cd carla-client/ros2
-    pids+=($(start_process "python3 ./image_converter.py --input_topic /carla/ego_vehicle/rgb_front/image --output_topic /carla/ego_vehicle/rgb_front/image_compressed" "../../$log_dir/image_conv1.log"))
-    pids+=($(start_process "python3 ./image_converter.py --input_topic /carla/ego_vehicle/depth_front/image --output_topic /carla/ego_vehicle/depth_front/image_compressed" "../../$log_dir/image_conv2.log"))
+    pids+=($(start_process "python3 ./image_converter.py --input_topic /carla/ego_vehicle/rgb_front/image --output_topic /carla/ego_vehicle/rgb_front/compressed_image" "../../$log_dir/image_conv1.log"))
+    pids+=($(start_process "python3 ./image_converter.py --input_topic /carla/ego_vehicle/depth_front/image --output_topic /carla/ego_vehicle/depth_front/compressed_image" "../../$log_dir/image_conv2.log"))
     cd ../../
     log "pids: $pids"
 
@@ -64,9 +66,9 @@ main() {
     cd ..
     log "pids: $pids"
     
-    pids+=($(start_process "python3 ./observability/can-stats/generate_stats.py" "./$log_dir/generate_stats.log"))
+    # pids+=($(start_process "sudo python3 ./observability/can-stats/generate_stats.py" "./$log_dir/generate_stats.log"))
 
-    log "pids: $pids"
+    # log "pids: $pids"
 
     # Monitor all process groups
     while : ; do
