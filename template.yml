@@ -236,7 +236,7 @@ Resources:
                 python -m venv ~/venv
                 source ~/venv/bin/activate
                 python -m pip install --upgrade pip
-                python -m pip install carla
+                python -m pip install carla==0.9.13
                 python -m pip install -r /opt/carla-simulator/PythonAPI/examples/requirements.txt
               mode: "000755"
               owner: "ubuntu"
