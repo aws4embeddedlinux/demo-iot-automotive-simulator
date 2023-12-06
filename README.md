@@ -10,7 +10,13 @@ CARLA is an open-source simulator for autonomous driving research to support the
 
 ### NICE DCV
 
-NICE DCV is a high-performance remote display protocol that provides customers with a secure way to deliver remote desktops and application streaming from any cloud or data center to any device over varying network conditions. NICE DCV provides web browser support. Besides, you can download the native client from ([https://download.nice-dcv.com/](https://download.nice-dcv.com/)).
+NICE DCV is a high-performance remote display protocol that provides customers with a secure way to deliver remote desktops and application streaming from any cloud or data center to any device over varying network conditions.
+For security reasons we do not put the EC2 instance in a public subnet, therefore you need to use the AWS systems manager with the [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-debian-and-ubuntu.html) to tunnel the DCV port to your local machine.
+```
+aws ssm start-session --target i-<instance id> --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8443"], "localPortNumber":["8443"]}'
+```
+Then setup the NICE DCV client to connect to localhost:8443 and set Connection Setting to be WebSockets/TCP instead of QUIC.
+
 
 ### Deployment instructions
 
@@ -35,7 +41,11 @@ It may take up to 60 minutes to provision the EC2 instance. After your stack has
 
 Go to the **SSMSessionManager** row, open the URL (in the form _https://\<REGION\>.console.aws.amazon.com/systems-manager/session-manager/\<InstanceID\>_) in a new browser tab to log in via SSM Session Manager to change login user password. The password change command is " **sudo passwd ubuntu**".
 
-From the **DCVwebConsole** row, open the URL (in the form https://\<EC2 Public IP\>:8443/) to access the NICE DCV web browser console and log in as an ubuntu user with the recently changed password.
+Do start the
+```
+aws ssm start-session --target i-<instance id> --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8443"], "localPortNumber":["8443"]}'
+```
+Use the local **DCVConsole** and log in as an ubuntu user with the recently changed password. Do not forget setting to be WebSockets/TCP instead of QUIC.
 
 ### Installing CARLA Simulator
 
@@ -48,6 +58,8 @@ Then, you can test your CARLA installation by running "./CarlaUE4.sh" from "/opt
 ### Testing the PythonAPI
 
 The best way to test the Python API is to drive a car. In order to do so, you will have to follow the steps below:
+
+- Start the server "/opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Epic -prefernvidia" in different terminal
 
 1. Activate the virtual environment created by the installation with the command ". venv/bin/activate" from the "ubuntu" user's home.
 2. Navigate to the PythonAPI examples folder "cd /opt/carla-simulator/PythonAPI/examples".
@@ -66,4 +78,3 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
-
