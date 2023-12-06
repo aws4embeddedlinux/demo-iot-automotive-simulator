@@ -26,6 +26,12 @@ Metadata:
         Parameters:
           - volumeSize
           - volumeType
+      - Label:
+          default: Biga configuration
+        Parameters:
+          - BigaAmiId
+          - BigaInstanceType
+          - keyName
 Parameters:
   instanceType:
     Type: String
@@ -44,7 +50,7 @@ Parameters:
       - g5.12xlarge
       - g5.16xlarge
     ConstraintDescription: Must contain valid instance type.
-    Default: g4dn.xlarge
+    Default: g5.16xlarge
   ec2Name:
     Description: EC2 instance name
     Type: String
@@ -71,6 +77,14 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Description: Ubuntu 22.04 (x86_64)
     Default: /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  BigaAmiId:
+    Type: String
+    Description: The Biga ami image id
+  BigaInstanceType:
+    Type: String
+    Description: Instance type for the biga image
+    Default: t4g.micro
+
 Resources:
   vpc:
     Type: AWS::EC2::VPC
@@ -195,7 +209,7 @@ Resources:
       Path: /
       Roles:
         - !Ref instanceIamRole
-  ec2Instance:
+  ec2InstanceCarla:
     Type: AWS::EC2::Instance
     CreationPolicy:
       ResourceSignal:
@@ -302,7 +316,7 @@ Resources:
           python2 setup.py build
           python2 setup.py install
           # cfn-init
-          python2 /usr/local/bin/cfn-init -v --stack ${AWS::StackName} --resource ec2Instance --region ${AWS::Region} -c setup
+          python2 /usr/local/bin/cfn-init -v --stack ${AWS::StackName} --resource ec2InstanceCarla --region ${AWS::Region} -c setup
           # install firefox browser
           apt-get -q -y install firefox
           # https://docs.aws.amazon.com/dcv/latest/adminguide/setting-up-installing-linux-prereq.html
@@ -384,7 +398,7 @@ Resources:
           # Nvidia Drivers
           apt install -q -y $(nvidia-detector)
           # cfn-init completed so signal success or not
-          python2 /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ec2Instance --region ${AWS::Region}
+          python2 /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ec2InstanceCarla --region ${AWS::Region}
           reboot
       Tags:
         - Key: Name
@@ -393,13 +407,22 @@ Resources:
           Value: !Sub ${AWS::StackName}
         - Key: StackId
           Value: !Sub ${AWS::StackId}
+  ec2InstanceBiga:
+    Type: AWS::EC2::Instance
+    Properties:
+          ImageId: !Ref BigaAmiId
+          InstanceType: !Ref BigaInstanceType
+          SubnetId: !Ref PrivateSubnet1
+          KeyName: !Ref keyName
+          SecurityGroupIds:
+            - !Ref securityGroup
 Outputs:
   InstanceID:
     Description: EC2 Instance ID
-    Value: !Ref ec2Instance
+    Value: !Ref ec2InstanceCarla
   SSMsessionManager:
     Description: SSM Session Manager login ("sudo passwd ubuntu" to change password)
-    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${ec2Instance}
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${ec2InstanceCarla}
   DCVdownload:
     Description: DCV client download
     Value: https://download.nice-dcv.com
