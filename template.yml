@@ -18,10 +18,6 @@ Metadata:
         Parameters:
           - ec2Name
       - Label:
-          default: Allowed inbound source IP prefixes to NICE DCV port 8443
-        Parameters:
-          - ingressIPv4
-      - Label:
           default: EBS volume configuration
         Parameters:
           - volumeSize
@@ -58,10 +54,6 @@ Parameters:
   keyName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: SSH KeyPair
-  ingressIPv4:
-    Type: String
-    Description: Allowed source prefix (IPv4) ( https://checkip.amazonaws.com )
-    Default: 0.0.0.0/0
   volumeType:
     Type: String
     Description: Volume Type ( https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html )
@@ -78,12 +70,16 @@ Parameters:
     Description: Ubuntu 22.04 (x86_64)
     Default: /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id
   BigaAmiId:
-    Type: String
+    Type: AWS::EC2::Image::Id
     Description: The Biga ami image id
   BigaInstanceType:
     Type: String
     Description: Instance type for the biga image
     Default: t4g.micro
+  BigaInstanceName:
+    Type: String
+    Description: Name of Biga Instance
+    Default: Biga
 
 Resources:
   vpc:
@@ -96,13 +92,13 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.128.0/17
-      AvailabilityZone: us-west-2a  # This cannot be us-west-2d for our application...
+      AvailabilityZone: us-west-2a # This cannot be us-west-2d for our application...
       VpcId: !Ref vpc
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: 10.0.0.0/17
-      AvailabilityZone: us-west-2a  # This cannot be us-west-2d for our application...
+      AvailabilityZone: us-west-2a # This cannot be us-west-2d for our application...
       VpcId: !Ref vpc
       MapPublicIpOnLaunch: true
 
@@ -127,8 +123,8 @@ Resources:
   PublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-         RouteTableId: !Ref PublicRouteTable
-         SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
 
   NatIP:
     Type: AWS::EC2::EIP
@@ -157,24 +153,41 @@ Resources:
       SubnetId: !Ref PrivateSubnet1
       RouteTableId: !Ref PrivateRouteTable
 
-  securityGroup:
+  CarlaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow inbound DCV
+      GroupDescription: Carla Security Group
       VpcId: !Ref vpc
-      SecurityGroupIngress:
-        - Description: SSH
-          IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref ingressIPv4
       Tags:
         - Key: StackName
           Value: !Sub ${AWS::StackName}
         - Key: StackId
           Value: !Sub ${AWS::StackId}
         - Key: Name
-          Value: !Sub '[${AWS::StackName}] - ${ec2Name}'
+          Value: !Sub "[${AWS::StackName}] - ${ec2Name}"
+  BigaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Traffic From Carla
+      VpcId: !Ref vpc
+      SecurityGroupIngress:
+        - Description: SSH
+          IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          SourceSecurityGroupId: !Ref CarlaSecurityGroup
+        - Description: vCAN
+          IpProtocol: udp
+          FromPort: "3030"
+          ToPort: "3030"
+          SourceSecurityGroupId: !Ref CarlaSecurityGroup
+      Tags:
+        - Key: StackName
+          Value: !Sub ${AWS::StackName}
+        - Key: StackId
+          Value: !Sub ${AWS::StackId}
+        - Key: Name
+          Value: !Sub "[${AWS::StackName}] - ${ec2Name}"
   instanceIamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -190,7 +203,7 @@ Resources:
       Policies:
         - PolicyName: dcvLicensing
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -246,7 +259,7 @@ Resources:
                 sudo apt-get install -y ./nice-dcv-server_*.deb
                 sudo apt-get install -y ./nice-dcv-web-viewer_*.deb
                 sudo apt-get install -y ./nice-xdcv_*.deb
-              mode: '000755'
+              mode: "000755"
               owner: ubuntu
               group: users
             /home/ubuntu/update-awscli:
@@ -261,7 +274,7 @@ Resources:
                 fi
                 unzip -q -o awscliv2.zip
                 sudo ./aws/install --update -b /usr/bin
-              mode: '000755'
+              mode: "000755"
               owner: ubuntu
               group: users
             /home/ubuntu/install-carla:
@@ -282,7 +295,7 @@ Resources:
                 python -m pip install --upgrade pip
                 python -m pip install carla==0.9.13
                 python -m pip install -r /opt/carla-simulator/PythonAPI/examples/requirements.txt
-              mode: '000755'
+              mode: "000755"
               owner: ubuntu
               group: users
     Properties:
@@ -293,7 +306,7 @@ Resources:
       KeyName: !Ref keyName
       Monitoring: true
       SecurityGroupIds:
-        - !Ref securityGroup
+        - !Ref CarlaSecurityGroup
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -410,12 +423,15 @@ Resources:
   ec2InstanceBiga:
     Type: AWS::EC2::Instance
     Properties:
-          ImageId: !Ref BigaAmiId
-          InstanceType: !Ref BigaInstanceType
-          SubnetId: !Ref PrivateSubnet1
-          KeyName: !Ref keyName
-          SecurityGroupIds:
-            - !Ref securityGroup
+      ImageId: !Ref BigaAmiId
+      InstanceType: !Ref BigaInstanceType
+      SubnetId: !Ref PrivateSubnet1
+      KeyName: !Ref keyName
+      SecurityGroupIds:
+        - !Ref BigaSecurityGroup
+      Tags:
+           - Value: Name
+             Key: !Ref BigaInstanceName
 Outputs:
   InstanceID:
     Description: EC2 Instance ID
