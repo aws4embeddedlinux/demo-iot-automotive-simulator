@@ -232,7 +232,7 @@ Resources:
         - !Ref instanceIamRole
   Ec2InstanceCarlaNetworkInterface:
     Type: AWS::EC2::NetworkInterface
-    Properties: 
+    Properties:
       SubnetId: !Ref PrivateSubnet2
       Description: "Network interface for ec2InstanceCarla"
       GroupSet:
@@ -310,6 +310,7 @@ Resources:
                 python -m pip install --upgrade pip
                 python -m pip install carla==0.9.13
                 python -m pip install -r /opt/carla-simulator/PythonAPI/examples/requirements.txt
+                sudo apt-get -y install can-utils linux-modules-extra-$(uname -r)
               mode: "000755"
               owner: ubuntu
               group: users
@@ -437,7 +438,7 @@ Resources:
 
   Ec2InstanceBigaNetworkInterface:
     Type: AWS::EC2::NetworkInterface
-    Properties: 
+    Properties:
       SubnetId: !Ref PrivateSubnet1
       Description: "Network interface for ec2InstanceBiga"
       GroupSet:
@@ -469,7 +470,7 @@ Resources:
 
   TransitGatewayAttachmentVPC:
     Type: "AWS::EC2::TransitGatewayAttachment"
-    Properties: 
+    Properties:
       TransitGatewayId: !Ref MyTransitGateway
       VpcId: !Ref vpc
       SubnetIds:
@@ -485,14 +486,14 @@ Resources:
 
   MulticastDomainAssociation1:
     Type: "AWS::EC2::TransitGatewayMulticastDomainAssociation"
-    Properties: 
+    Properties:
       SubnetId: !Ref PrivateSubnet1
       TransitGatewayAttachmentId: !Ref TransitGatewayAttachmentVPC
       TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
 
   MulticastDomainAssociation2:
     Type: "AWS::EC2::TransitGatewayMulticastDomainAssociation"
-    Properties: 
+    Properties:
       SubnetId: !Ref PrivateSubnet2
       TransitGatewayAttachmentId: !Ref TransitGatewayAttachmentVPC
       TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
@@ -502,7 +503,7 @@ Resources:
     DependsOn: MulticastDomainAssociation1
     Properties:
       GroupIpAddress: '239.255.0.1'
-      NetworkInterfaceId:  !Ref Ec2InstanceBigaNetworkInterface 
+      NetworkInterfaceId:  !Ref Ec2InstanceBigaNetworkInterface
       TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
 
   MulticastGroupMember2:

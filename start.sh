@@ -31,8 +31,17 @@ trap cleanup EXIT SIGINT SIGTERM
 
 # Main execution
 main() {
+    # make vcan0 interface
+    sudo modprobe vcan
+    sudo ip link add dev vcan0 type vcan
+    sudo ip link set up vcan0
+
     # Array to store process group IDs
     declare -a pids
+
+    # setup vcan forwarding
+    pids+=($(start_process "candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr" "$log_dir/socketcan.log"))
+    log "pids: $pids"
 
     # Start processes
     pids+=($(start_process "/opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Low -prefernvidia" "$log_dir/carla.log"))
@@ -43,7 +52,7 @@ main() {
     source ~/ros2_ws/install/setup.bash
 
     cd carla-client
-    pids+=($(start_process "python3 ./manual_control_steeringwheel.py --sync --rolename ego_vehicle --filter vehicle.tesla.model3 -i can0" "../$log_dir/control.log"))
+    pids+=($(start_process "python3 ./manual_control_steeringwheel.py --sync --rolename ego_vehicle --filter vehicle.tesla.model3 -i vcan0" "../$log_dir/control.log"))
     pids+=($(start_process "python3 /opt/carla-simulator/PythonAPI/examples/generate_traffic.py -n 15 -w 20" "../$log_dir/traffic_gen.log"))
     cd ..
     log "pids: $pids"
@@ -65,7 +74,7 @@ main() {
     pids+=($(start_process "python3 breeze.py" "../$log_dir/breeze.log"))
     cd ..
     log "pids: $pids"
-    
+
     # pids+=($(start_process "sudo python3 ./observability/can-stats/generate_stats.py" "./$log_dir/generate_stats.log"))
 
     # log "pids: $pids"
