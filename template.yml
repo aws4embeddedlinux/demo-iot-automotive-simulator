@@ -27,7 +27,6 @@ Metadata:
         Parameters:
           - BigaAmiId
           - BigaInstanceType
-          - keyName
 Parameters:
   instanceType:
     Type: String
@@ -51,9 +50,6 @@ Parameters:
     Description: EC2 instance name
     Type: String
     Default: Ubuntu-CARLA-NICE-DCV
-  keyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    Description: SSH KeyPair
   volumeType:
     Type: String
     Description: Volume Type ( https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html )
@@ -67,8 +63,8 @@ Parameters:
     Default: 40
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Description: Ubuntu 22.04 (x86_64)
-    Default: /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+    Description: Ubuntu 20.04 (x86_64)
+    Default: /aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
   BigaAmiId:
     Type: AWS::EC2::Image::Id
     Description: The Biga ami image id
@@ -91,14 +87,20 @@ Resources:
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      CidrBlock: 10.0.128.0/17
-      AvailabilityZone: us-west-2a # This cannot be us-west-2d for our application...
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
       VpcId: !Ref vpc
-  PublicSubnet1:
+  PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      CidrBlock: 10.0.0.0/17
-      AvailabilityZone: us-west-2a # This cannot be us-west-2d for our application...
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      VpcId: !Ref vpc
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
       VpcId: !Ref vpc
       MapPublicIpOnLaunch: true
 
@@ -124,7 +126,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref PublicSubnet
 
   NatIP:
     Type: AWS::EC2::EIP
@@ -135,7 +137,7 @@ Resources:
     Type: AWS::EC2::NatGateway
     Properties:
       AllocationId: !GetAtt NatIP.AllocationId
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref PublicSubnet
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -152,35 +154,41 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet1
       RouteTableId: !Ref PrivateRouteTable
-
-  CarlaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      GroupDescription: Carla Security Group
-      VpcId: !Ref vpc
-      Tags:
-        - Key: StackName
-          Value: !Sub ${AWS::StackName}
-        - Key: StackId
-          Value: !Sub ${AWS::StackId}
-        - Key: Name
-          Value: !Sub "[${AWS::StackName}] - ${ec2Name}"
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+
+
   BigaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Traffic From Carla
       VpcId: !Ref vpc
       SecurityGroupIngress:
-        - Description: SSH
-          IpProtocol: tcp
+        - IpProtocol: tcp
+          Description: SSH
           FromPort: "22"
           ToPort: "22"
-          SourceSecurityGroupId: !Ref CarlaSecurityGroup
-        - Description: vCAN
-          IpProtocol: udp
-          FromPort: "3030"
-          ToPort: "3030"
-          SourceSecurityGroupId: !Ref CarlaSecurityGroup
+        - IpProtocol: udp
+          Description: Ingress multicast traffic (UDP)
+          FromPort: '0'
+          ToPort: '65535'
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: 2
+          Description: IGMP Receivers
+          CidrIp: 10.0.0.0/16
+        - IpProtocol: 2
+          Description: IGMP Querier
+          CidrIp: 0.0.0.0/32
+      SecurityGroupEgress:
+        - IpProtocol: all
+          Description: Egress multicast traffic (UDP)
+          FromPort: '0'
+          ToPort: '65535'
+          CidrIp: 0.0.0.0/0
       Tags:
         - Key: StackName
           Value: !Sub ${AWS::StackName}
@@ -222,6 +230,13 @@ Resources:
       Path: /
       Roles:
         - !Ref instanceIamRole
+  Ec2InstanceCarlaNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties: 
+      SubnetId: !Ref PrivateSubnet2
+      Description: "Network interface for ec2InstanceCarla"
+      GroupSet:
+        - !Ref BigaSecurityGroup
   ec2InstanceCarla:
     Type: AWS::EC2::Instance
     CreationPolicy:
@@ -302,11 +317,10 @@ Resources:
       ImageId: !Ref ImageId
       InstanceType: !Ref instanceType
       IamInstanceProfile: !Ref instanceProfile
-      SubnetId: !Ref PrivateSubnet1
-      KeyName: !Ref keyName
       Monitoring: true
-      SecurityGroupIds:
-        - !Ref CarlaSecurityGroup
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref Ec2InstanceCarlaNetworkInterface
+          DeviceIndex: "0"
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -420,18 +434,85 @@ Resources:
           Value: !Sub ${AWS::StackName}
         - Key: StackId
           Value: !Sub ${AWS::StackId}
+
+  Ec2InstanceBigaNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties: 
+      SubnetId: !Ref PrivateSubnet1
+      Description: "Network interface for ec2InstanceBiga"
+      GroupSet:
+        - !Ref BigaSecurityGroup
+
   ec2InstanceBiga:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: !Ref BigaAmiId
       InstanceType: !Ref BigaInstanceType
-      SubnetId: !Ref PrivateSubnet1
-      KeyName: !Ref keyName
-      SecurityGroupIds:
-        - !Ref BigaSecurityGroup
+      NetworkInterfaces:
+        - NetworkInterfaceId: !Ref Ec2InstanceBigaNetworkInterface
+          DeviceIndex: "0"
       Tags:
            - Value: Name
              Key: !Ref BigaInstanceName
+
+  MyTransitGateway:
+    Type: "AWS::EC2::TransitGateway"
+    Properties:
+      Description: "Transit Gateway for multicast"
+      AmazonSideAsn: 64512
+      AutoAcceptSharedAttachments: "enable"
+      DefaultRouteTableAssociation: "enable"
+      DefaultRouteTablePropagation: "enable"
+      DnsSupport: "enable"
+      MulticastSupport: "enable"
+      VpnEcmpSupport: "enable"
+
+  TransitGatewayAttachmentVPC:
+    Type: "AWS::EC2::TransitGatewayAttachment"
+    Properties: 
+      TransitGatewayId: !Ref MyTransitGateway
+      VpcId: !Ref vpc
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  TransitGatewayMulticastDomain:
+    Type: "AWS::EC2::TransitGatewayMulticastDomain"
+    Properties:
+      TransitGatewayId: !Ref MyTransitGateway
+      Options:
+        Igmpv2Support: 'enable'
+
+  MulticastDomainAssociation1:
+    Type: "AWS::EC2::TransitGatewayMulticastDomainAssociation"
+    Properties: 
+      SubnetId: !Ref PrivateSubnet1
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachmentVPC
+      TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
+
+  MulticastDomainAssociation2:
+    Type: "AWS::EC2::TransitGatewayMulticastDomainAssociation"
+    Properties: 
+      SubnetId: !Ref PrivateSubnet2
+      TransitGatewayAttachmentId: !Ref TransitGatewayAttachmentVPC
+      TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
+
+  MulticastGroupMember1:
+    Type: AWS::EC2::TransitGatewayMulticastGroupMember
+    DependsOn: MulticastDomainAssociation1
+    Properties:
+      GroupIpAddress: '239.255.0.1'
+      NetworkInterfaceId:  !Ref Ec2InstanceBigaNetworkInterface 
+      TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
+
+  MulticastGroupMember2:
+    Type: AWS::EC2::TransitGatewayMulticastGroupMember
+    DependsOn: MulticastDomainAssociation2
+    Properties:
+      GroupIpAddress: '239.255.0.1'
+      NetworkInterfaceId: !Ref Ec2InstanceCarlaNetworkInterface
+      TransitGatewayMulticastDomainId: !Ref TransitGatewayMulticastDomain
+
 Outputs:
   InstanceID:
     Description: EC2 Instance ID
