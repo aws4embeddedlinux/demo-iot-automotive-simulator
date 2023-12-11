@@ -1,0 +1,14 @@
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain id="any">
+         <General>
+           <AllowMulticast>false</AllowMulticast>
+           <EnableMulticastLoopback>false</EnableMulticastLoopback>
+        </General>
+        <Discovery>
+            <Peers>
+                <Peer address="<IP Address>"/>
+            </Peers>
+            <ParticipantIndex>auto</ParticipantIndex>
+        </Discovery>
+    </Domain>
+</CycloneDDS>
