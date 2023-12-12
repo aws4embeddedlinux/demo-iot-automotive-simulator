@@ -54,7 +54,7 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    We will be using lower rendering in order to increase FPS:
 
    ```bash
-   /opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Low -prefernvidia 
+   /opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Low -prefernvidia
 
    ```
 
