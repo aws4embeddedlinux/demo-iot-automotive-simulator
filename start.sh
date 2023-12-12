@@ -31,15 +31,10 @@ trap cleanup EXIT SIGINT SIGTERM
 
 # Main execution
 main() {
-    # make vcan0 interface
-    sudo modprobe vcan
-    sudo ip link add dev vcan0 type vcan
-    sudo ip link set up vcan0
-
     # Array to store process group IDs
     declare -a pids
 
-    # setup vcan forwarding
+    # start vcan multicast forwarding
     pids+=($(start_process "candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr" "$log_dir/socketcan.log"))
     log "pids: $pids"
 
