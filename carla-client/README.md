@@ -111,7 +111,10 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
 Optionally, there is a `start.sh`` script that starts all the processes and ensures that if one of them dies, everything is closed properly. It can be used to start the demo.
 
 ```
-./start.sh
+# when using with real hardware
+./start.sh -i can0 --use_steering_wheel
+# otherwise
+./start.sh -i vcan0
 ```
 
 ## Troubleshooting
