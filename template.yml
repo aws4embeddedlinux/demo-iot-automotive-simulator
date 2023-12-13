@@ -310,7 +310,7 @@ Resources:
                 python -m pip install --upgrade pip
                 python -m pip install carla==0.9.13
                 python -m pip install -r /opt/carla-simulator/PythonAPI/examples/requirements.txt
-                sudo apt-get -y install can-utils linux-modules-extra-$(uname -r)
+                sudo apt-get -y install can-utils socat linux-modules-extra-$(uname -r)
               mode: "000755"
               owner: ubuntu
               group: users
@@ -453,8 +453,8 @@ Resources:
         - NetworkInterfaceId: !Ref Ec2InstanceBigaNetworkInterface
           DeviceIndex: "0"
       Tags:
-           - Value: Name
-             Key: !Ref BigaInstanceName
+          - Key: Name
+            Value: !Ref BigaInstanceName
 
   MyTransitGateway:
     Type: "AWS::EC2::TransitGateway"

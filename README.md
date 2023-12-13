@@ -37,10 +37,10 @@ Specify a **Stack name** and specify parameter values. All fields are required.
 
 - **imageId** : [System Manager Parameter](https://aws.amazon.com/blogs/compute/using-system-manager-parameter-as-an-alias-for-ami-id/) path to AMI ID.
 - **instanceType:** appropriate [instance type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html).
-- **ec2Name:** name of EC2 instance
-- **vpcID:** [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) with internet connectivity.
-- **subnetID:** subnet with internet connectivity.
-- **ingressIPv4:** allowed IPv4 source prefix to NICE DCV listening ports at 8443. Get source IP from [https://checkip.amazonaws.com](https://checkip.amazonaws.com/)
+- **ec2Name:** Name of the EC2 instance.
+- **BigaAmiId:** AMI of the EC2 image for the Biga device. This can be found in the end of the CodeBuild build logs when the [EC2AMIBigaPipeline-EmbeddedLinuxPipeline*](https://github.com/aws4embeddedlinux/demo-iot-automotive-embeddedlinux-image) is finished. Search for "AMI ID:".
+- **BigaInstanceType:** Instance type of the Biga device.
+- **BigaInstanceName:** Name of the Biga device.
 
 ![CloudFormation parameters](/images/cloudformation-parameters.png "Parameters")
 
@@ -54,7 +54,7 @@ Go to the **SSMSessionManager** row, open the URL (in the form _https://\<REGION
 
 Do start the
 ```
-aws ssm start-session --target i-<instance id> --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8443"], "localPortNumber":["8443"]}'
+aws ssm start-session --target <instance id> --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["8443"], "localPortNumber":["8443"]}'
 ```
 Use the local **DCVConsole** and log in as an ubuntu user with the recently changed password. Do not forget setting to be WebSockets/TCP instead of QUIC.
 
@@ -65,6 +65,12 @@ Once logged in to the Ubuntu remote desktop, run the command "./install-carla" f
 Then, you can test your CARLA installation by running "./CarlaUE4.sh" from "/opt/carla-simulator". You will see an image with the world simulation running successfully.
 
 ![CARLA Running](/images/carla-running.png "CARLA Running")
+
+## Installing ROS
+Follow instructions [here](carla-client/README.md).
+
+## Installing socket-can-setup
+Follow instructions [here](socket-can-setup/README.md).
 
 ### Testing the PythonAPI
 
@@ -81,6 +87,33 @@ Here is the link to the complete [CARLA documentation](https://carla.readthedocs
 ![CARLA PythonAPI](/images/carla-manual-conrtrol.png "CARLA PythonAPI")
 
 This AWS CloudFormation template has been made possible by using as a reference the [Amazon EC2 NICE DVC Samples](https://github.com/aws-samples/amazon-ec2-nice-dcv-samples).
+
+## Testing vcan connection to biga ec2 device
+Running this on the biga ec2 instance, connect via EC2 serial console. Stop after test - "ctrl-c".
+```
+candump vcan0
+```
+
+Running this on the Carla ec2 instance, in a terminal.
+
+```
+candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr
+```
+
+Running this on the Carla ec2 instance, in another terminal.
+
+
+```
+cansend vcan0 123#00FFAA5501020304
+```
+
+You should see this in the biga ec2 instance:
+
+```
+root@ip-10-0-1-93:~# candump vcan0
+interface = vcan0, family = 29, type = 3, proto = 1
+<0x001> [8] 00 7b 00 00 00 00 37 01
+```
 
 ## Security
 
