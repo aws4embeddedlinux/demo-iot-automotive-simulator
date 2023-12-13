@@ -10,6 +10,8 @@ CARLA is an open-source simulator for autonomous driving research to support the
 
 ### NICE DCV
 
+![Architecture](/images/arch.png "Architecture")
+
 NICE DCV is a high-performance remote display protocol that provides customers with a secure way to deliver remote desktops and application streaming from any cloud or data center to any device over varying network conditions.
 For security reasons we do not put the EC2 instance in a public subnet, therefore you need to use the AWS systems manager with the [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/install-plugin-debian-and-ubuntu.html) to tunnel the DCV port to your local machine.
 ```
@@ -17,6 +19,15 @@ aws ssm start-session --target i-<instance id> --document-name AWS-StartPortForw
 ```
 Then setup the NICE DCV client to connect to localhost:8443 and set Connection Setting to be WebSockets/TCP instead of QUIC.
 
+To use the simplified architecture without Transit Gateway (using `template-unicast.yml`), follow these steps:
+
+1. Be aware that this setup does not support UDP multicasting.
+2. Configure both the device simulator and CARLA for unicast when using ROS2.
+3. Find the example configuration for `cyclonedds` at: `carla-client/ros2/cyclonedds_unicast.yaml`.
+4. Before running the ROS2 example, set the `CYCLONEDDS_URI` environment variable with this command:
+   ```
+   export CYCLONEDDS_URI=carla-client/ros2/cyclonedds_unicast.yaml
+   ```
 
 ### Deployment instructions
 
