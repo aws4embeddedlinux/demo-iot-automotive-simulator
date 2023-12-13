@@ -2,7 +2,13 @@
 
 Please follow the instructions from the project README.md before preforming these.
 
-Also follow the following instructions to install (ROS2 Galactic)[https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html]
+In order to install ROS2, you can simply run the provided /home/ubuntu/install-ros2, or follow these instructions (ROS2 Galactic)[https://docs.ros.org/en/galactic/Installation/Ubuntu-Install-Debians.html]
+
+Additionally install `rosdep2` and `colcon`:
+```bash
+sudo apt install python3-rosdep2
+sudo apt install python3-colcon-common-extensions
+```
 
 **System Architecture**
 
@@ -45,7 +51,6 @@ Also follow the following instructions to install (ROS2 Galactic)[https://docs.r
    rosdep update
    cd ..
    rosdep install --from-paths src --ignore-src -r -y
-   sudo apt install python3-rosdep2
    colcon build --symlink-install
    ```
 
