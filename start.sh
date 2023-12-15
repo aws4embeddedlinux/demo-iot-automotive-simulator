@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Parsing command-line arguments
+additional_carla_client_args="$@"
 
 log_dir="./logs"
 mkdir -p $log_dir
@@ -47,7 +49,7 @@ main() {
     source ~/ros2_ws/install/setup.bash
 
     cd carla-client
-    pids+=($(start_process "python3 ./manual_control_steeringwheel.py --sync --rolename ego_vehicle --filter vehicle.tesla.model3 -i vcan0" "../$log_dir/control.log"))
+    pids+=($(start_process "python3 ./manual_control_steeringwheel.py --sync --rolename ego_vehicle --filter vehicle.tesla.model3 $additional_carla_client_args" "../$log_dir/control.log"))
     pids+=($(start_process "python3 /opt/carla-simulator/PythonAPI/examples/generate_traffic.py -n 15 -w 20" "../$log_dir/traffic_gen.log"))
     cd ..
     log "pids: $pids"

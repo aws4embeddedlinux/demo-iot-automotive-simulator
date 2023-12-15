@@ -108,18 +108,18 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
-from evdev import ecodes, InputDevice, ff, list_devices
-import time
 
-# Find first EV_FF capable event device (that we have permissions to use).
-for name in list_devices():
-    dev = InputDevice(name)
-    if ecodes.EV_FF in dev.capabilities():
-        break
+def initialize_steering_wheel():
+    from evdev import ecodes, InputDevice, ff, list_devices
 
-val = 65535 # [0 to 65535]
-dev.write(ecodes.EV_FF, ecodes.FF_AUTOCENTER, val)
+    # Find first EV_FF capable event device (that we have permissions to use).
+    for name in list_devices():
+        dev = InputDevice(name)
+        if ecodes.EV_FF in dev.capabilities():
+            break
 
+    val = 65535  # [0 to 65535]
+    dev.write(ecodes.EV_FF, ecodes.FF_AUTOCENTER, val)
 
 # rumble = ff.Rumble(strong_magnitude=0x0000, weak_magnitude=0xffff)
 # effect_type = ff.EffectType(ff_rumble_effect=rumble)
@@ -315,8 +315,9 @@ class World(object):
 
 
 class DualControl(object):
-    def __init__(self, world, start_in_autopilot):
+    def __init__(self, world, start_in_autopilot, use_steering_wheel):
         self._autopilot_enabled = start_in_autopilot
+        self._use_steering_wheel = use_steering_wheel
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             world.player.set_autopilot(self._autopilot_enabled)
@@ -329,31 +330,34 @@ class DualControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-        # initialize steering wheel
-        pygame.joystick.init()
 
-        joystick_count = pygame.joystick.get_count()
-        if joystick_count > 1:
-            raise ValueError("Please Connect Just One Joystick")
+        if self._use_steering_wheel:
 
-        self._joystick = pygame.joystick.Joystick(0)
-        self._joystick.init()
+            # initialize steering wheel
+            pygame.joystick.init()
 
-        self._parser = ConfigParser()
-        self._parser.read('wheel_config.ini')
-        self._steer_idx = int(
-           self._parser.get('G29 Racing Wheel', 'steering_wheel'))
-        self._throttle_idx = int(
-           self._parser.get('G29 Racing Wheel', 'throttle'))
-        self._brake_idx = int(self._parser.get('G29 Racing Wheel', 'brake'))
-        self._reverse_idx = int(self._parser.get('G29 Racing Wheel', 'reverse'))
-        self._handbrake_idx = int(
-           self._parser.get('G29 Racing Wheel', 'handbrake'))
-        # self._steer_idx = 0
-        # self._throttle_idx = 5
-        # self._brake_idx = 2
-        # self._reverse_idx = 4
-        # self._handbrake_idx = 5
+            joystick_count = pygame.joystick.get_count()
+            if joystick_count > 1:
+                raise ValueError("Please Connect Just One Joystick")
+
+            self._joystick = pygame.joystick.Joystick(0)
+            self._joystick.init()
+
+            self._parser = ConfigParser()
+            self._parser.read('wheel_config.ini')
+            self._steer_idx = int(
+            self._parser.get('G29 Racing Wheel', 'steering_wheel'))
+            self._throttle_idx = int(
+            self._parser.get('G29 Racing Wheel', 'throttle'))
+            self._brake_idx = int(self._parser.get('G29 Racing Wheel', 'brake'))
+            self._reverse_idx = int(self._parser.get('G29 Racing Wheel', 'reverse'))
+            self._handbrake_idx = int(
+            self._parser.get('G29 Racing Wheel', 'handbrake'))
+            # self._steer_idx = 0
+            # self._throttle_idx = 5
+            # self._brake_idx = 2
+            # self._reverse_idx = 4
+            # self._handbrake_idx = 5
 
     def parse_events(self, world, clock):
         for event in pygame.event.get():
@@ -968,7 +972,7 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = World(sim_world, hud, args, carla_ros2_publisher)
-        controller = DualControl(world, args.autopilot)
+        controller = DualControl(world, args.autopilot, args.use_steering_wheel)
         if args.sync:
             sim_world.tick()
         else:
@@ -1052,6 +1056,10 @@ def main():
         '--sync',
         action='store_true',
         help='Activate synchronous mode execution')
+    argparser.add_argument(
+        '--use_steering_wheel',
+        action='store_true',
+        help='enable use of steeringwheel')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
@@ -1062,6 +1070,9 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
 
     print(__doc__)
+
+    if args.use_steering_wheel:
+        initialize_steering_wheel()
 
     try:
 
