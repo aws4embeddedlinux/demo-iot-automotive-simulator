@@ -28,6 +28,25 @@ cleanup() {
     done
 }
 
+#!/bin/bash
+
+# Function to convert candump output to cansend format
+convert_to_cansend_format() {
+    while read -r line; do
+        # Extracting CAN ID and data payload
+        # Using cut to extract fields based on specific character positions
+        can_id=$(echo "$line" | cut -d' ' -f3)
+        data=$(echo "$line" | cut -d' ' -f5- | tr -d '[] ' | sed 's/ //g')
+
+        # Format for cansend
+        echo "${can_id}#${data}"
+    done
+}
+
+# Main pipeline
+candump vcan0 | convert_to_cansend_format | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr
+
+
 # Trap script termination signals to cleanup
 trap cleanup EXIT SIGINT SIGTERM
 
@@ -36,9 +55,11 @@ main() {
     # Array to store process group IDs
     declare -a pids
 
-    # start vcan multicast forwarding
-    pids+=($(start_process "candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr" "$log_dir/socketcan.log"))
-    log "pids: $pids"
+    if [[ "$additional_carla_client_args" == *"vcan0"* ]]; then
+        log "start vcan multicast forwarding"
+        pids+=($(start_process "./multicast_can_send.sh" "$log_dir/socketcan.log"))
+        log "pids: $pids"
+    fi
 
     # Start processes
     pids+=($(start_process "/opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Low -prefernvidia" "$log_dir/carla.log"))
