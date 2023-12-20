@@ -97,7 +97,7 @@ candump vcan0
 Running this on the Carla ec2 instance, in a terminal.
 
 ```
-candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr
+./multicast_can_send.sh
 ```
 
 Running this on the Carla ec2 instance, in another terminal.
@@ -111,8 +111,8 @@ You should see this in the biga ec2 instance:
 
 ```
 root@ip-10-0-1-93:~# candump vcan0
-interface = vcan0, family = 29, type = 3, proto = 1
-<0x001> [8] 00 7b 00 00 00 00 37 01
+vcan0  123   [8]  00 FF AA 55 01 02 03 04
+
 ```
 
 ## Security
