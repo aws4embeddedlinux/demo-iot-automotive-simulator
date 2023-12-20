@@ -36,9 +36,11 @@ main() {
     # Array to store process group IDs
     declare -a pids
 
-    # start vcan multicast forwarding
-    pids+=($(start_process "candump vcan0 | socat - UDP4-DATAGRAM:239.255.0.1:3030,reuseaddr" "$log_dir/socketcan.log"))
-    log "pids: $pids"
+    if [[ "$additional_carla_client_args" == *"vcan0"* ]]; then
+        log "start vcan multicast forwarding"
+        pids+=($(start_process "./multicast_can_send.sh" "$log_dir/socketcan.log"))
+        log "pids: $pids"
+    fi
 
     # Start processes
     pids+=($(start_process "/opt/carla-simulator/CarlaUE4.sh -no-rendering -quality-level=Low -prefernvidia" "$log_dir/carla.log"))
