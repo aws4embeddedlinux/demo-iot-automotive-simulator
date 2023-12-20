@@ -2,13 +2,13 @@
 
 # Function to convert candump output to cansend format
 convert_to_cansend_format() {
-    while read -r line; do
-        # Extracting CAN ID and data payload
-        # Using cut to extract fields based on specific character positions
-        can_id=$(echo "$line" | cut -d' ' -f3)
-        data=$(echo "$line" | cut -d' ' -f5- | tr -d '[] ' | sed 's/ //g')
+    while IFS= read -r line; do
+        # Extract the can_id and the data payload using awk
+        # This uses a custom field separator to handle variable whitespace
+        can_id=$(echo "$line" | awk -F '  +' '{print $3}')
+        data=$(echo "$line" | awk -F '  +' '{for (i=5; i<=NF; i++) printf "%s", $i}' | tr -d '[] ' | sed 's/ //g')
 
-        # Format for cansend
+        # Output in cansend format
         echo "${can_id}#${data}"
     done
 }
