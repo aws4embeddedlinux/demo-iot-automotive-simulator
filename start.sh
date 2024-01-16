@@ -69,11 +69,6 @@ main() {
     cd ../../
     log "pids: $pids"
 
-    cd breeze
-    pids+=($(start_process "python3 breeze.py" "../$log_dir/breeze.log"))
-    cd ..
-    log "pids: $pids"
-
     # pids+=($(start_process "sudo python3 ./observability/can-stats/generate_stats.py" "./$log_dir/generate_stats.log"))
 
     # log "pids: $pids"
