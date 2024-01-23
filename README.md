@@ -62,6 +62,32 @@ Use the local **DCVConsole** and log in as an ubuntu user with the recently chan
 
 Once logged in to the Ubuntu remote desktop, run the command "./install-carla" from your user's root directory. The installation will download everything needed to set up CARLA, change the default Python version to 3.8, and creates a virtual environment installing all package required. It may take 5 to 10 minutes to finish based on the large size of the downloaded binaries.
 
+If you're facing [timeouts with the Debian package server when installing CARLA](https://github.com/carla-simulator/carla/issues/7017), you can try this alternative method for installation:
+
+#### 1. Install Required System Dependency
+Before downloading CARLA, install the necessary system dependency:
+```bash
+sudo apt-get -y install libomp5
+```
+
+#### 2. Download the CARLA 0.9.13 Release
+Download the CARLA_0.9.13.tar.gz file (approximately 16GB) from the official release:
+```bash
+wget https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/CARLA_0.9.13.tar.gz
+```
+
+#### 3. Unpack CARLA to the Desired Directory
+Unpack the downloaded file to `/opt/carla-simulator/`:
+```bash
+tar -xzvf CARLA_0.9.13.tar.gz -C /opt/carla-simulator/
+```
+#### 4. Install the CARLA Python Module
+Finally, install the CARLA Python module and necessary dependencies:
+```bash
+python -m pip install carla==0.9.13
+python -m pip install -r /opt/carla-simulator/PythonAPI/examples/requirements.txt
+```
+
 Then, you can test your CARLA installation by running "./CarlaUE4.sh" from "/opt/carla-simulator". You will see an image with the world simulation running successfully.
 
 ![CARLA Running](/images/carla-running.png "CARLA Running")
